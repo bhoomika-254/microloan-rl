@@ -1,0 +1,54 @@
+# FairPrice-MF — default configuration
+# -----------------------------------------------------------------------------
+# This file documents the *intended* config schema. The CLI scripts currently
+# accept these as flags; a future Hydra/OmegaConf wrapper will load them here.
+
+env:
+  seed: 0
+  r_min: 0.06          # 6% floor — below this we are not profitable to operate
+  regulatory_cap: 0.40 # 40% ceiling — RBI-style cap on MFI rates
+  discrete_actions: null      # null ⇒ 11-bucket grid; or supply explicit list
+  horizon: 1                  # 1 = bandit; >1 = sequential repeat-borrower
+  cohort:
+    reservation_rate_alpha: 2.0
+    reservation_rate_beta: 8.0
+    default_prob_base: 0.08
+    default_prob_rate_coef: 1.4
+    default_prob_repay_coef: -1.8
+    welfare_penalty_coef: 0.6
+    protected_affects_repayment: false
+  shocks:
+    regimes: ["baseline", "inflation", "drought", "pandemic"]
+    sampling: "uniform"       # or "weighted" with a `weights` list
+
+data:
+  n_dataset_episodes: 50000
+  exploration_rate: 0.15      # ε for the rule-based + ε·random behaviour policy
+  seed: 0
+
+trainer:
+  algorithm: "fair_cql"
+  obs_dim: 16
+  action_dim: 11
+  hidden: [256, 256]
+  lr: 3.0e-4
+  gamma: 0.99
+  tau: 5.0e-3
+  cql_weight: 1.0
+  fairness_weight_init: 1.0
+  fairness_lr: 5.0e-3
+  fairness_eps: 0.02
+  batch_size: 256
+  train_steps: 30000
+  grad_clip: 10.0
+  device: "cpu"
+
+audit:
+  parity_eps: 0.02
+  disparate_impact_floor: 0.80
+  counterfactual_n_samples: 1000
+
+deploy:
+  api_host: "127.0.0.1"
+  api_port: 8080
+  policy_version: "fair-cql-v0"
